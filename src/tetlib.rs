@@ -11,129 +11,60 @@ use crate::{
 
 pub const EMP: char = '.';
 
-pub fn render(gs: &mut GameState, is_updated: bool, block_characters: &String, colors: &bool) {
-    if !is_updated {
-        return;
-    }
+// pub fn render(gs: &mut GameState) {
+//     let mut stdout = stdout();
+//     let width: u16 = gs.display[0].len() as u16;
 
-    let mut stdout = stdout();
-    let width: u16 = gs.display[0].len() as u16;
+//     stdout.queue(MoveTo(width + 3, 1)).unwrap(); // move cursor to top left
+//     for (c, row) in gs.display.iter().enumerate() {
+//         for ch in row {
+//             match ch.game_state {
+//                 State::Empty => {
+//                     stdout.queue(Print("  ")).unwrap();
+//                 }
+//                 State::Active | State::Landed => {
+//                     let color = if !colors { ch.as_color() } else { Color::White };
 
-    stdout.queue(MoveTo(width + 3, 1)).unwrap(); // move cursor to top left
-    for (c, row) in gs.display.iter().enumerate() {
+//                     stdout
+//                         .queue(SetForegroundColor(color))
+//                         .unwrap()
+//                         .queue(Print(block_characters))
+//                         .unwrap()
+//                         .queue(ResetColor)
+//                         .unwrap();
+//                 }
+//                 State::Ghost => {
+//                     stdout
+//                         .queue(SetForegroundColor(Color::Rgb {
+//                             r: 50,
+//                             g: 50,
+//                             b: 50,
+//                         }))
+//                         .unwrap()
+//                         .queue(Print("//"))
+//                         .unwrap()
+//                         .queue(ResetColor)
+//                         .unwrap();
+//                 }
+//             }
+//         }
+//         stdout.queue(MoveTo(width + 3, (c + 2) as u16)).unwrap();
+//     }
+// }
+
+pub fn render(gs: &mut GameState) {
+    for row in gs.display.iter() {
         for ch in row {
             match ch.game_state {
-                State::Empty => {
-                    stdout.queue(Print("  ")).unwrap();
-                }
+                State::Empty => print!("  "),
                 State::Active | State::Landed => {
-                    let color = if !colors { ch.as_color() } else { Color::White };
-
-                    stdout
-                        .queue(SetForegroundColor(color))
-                        .unwrap()
-                        .queue(Print(block_characters))
-                        .unwrap()
-                        .queue(ResetColor)
-                        .unwrap();
+                    print!("[]");
                 }
-                State::Ghost => {
-                    stdout
-                        .queue(SetForegroundColor(Color::Rgb {
-                            r: 50,
-                            g: 50,
-                            b: 50,
-                        }))
-                        .unwrap()
-                        .queue(Print("//"))
-                        .unwrap()
-                        .queue(ResetColor)
-                        .unwrap();
-                }
+                State::Ghost => print!("//"),
             }
         }
-        stdout.queue(MoveTo(width + 3, (c + 2) as u16)).unwrap();
+        println!();
     }
-
-    // hold piece
-    stdout.queue(MoveTo(2, 1)).unwrap();
-    stdout.queue(Print("Hold:")).unwrap();
-    stdout.queue(MoveTo(2, 3)).unwrap();
-    match &gs.hold_piece {
-        Some(piece) => {
-            let mut blank = Tetrominoe::new(None, None);
-            let upright = blank.set(piece.ptype);
-            for row in 0..upright.shape.len() {
-                for col in 0..upright.shape[row].len() {
-                    if upright.shape[row][col] == 'a' {
-                        let color = if !colors {
-                            piece.as_color()
-                        } else {
-                            Color::White
-                        };
-
-                        stdout
-                            .queue(SetForegroundColor(color))
-                            .unwrap()
-                            .queue(Print(block_characters))
-                            .unwrap()
-                            .queue(ResetColor)
-                            .unwrap();
-                    } else {
-                        stdout.queue(Print("  ")).unwrap();
-                    }
-                }
-                stdout.queue(MoveTo(2, (row + 4) as u16)).unwrap();
-            }
-        }
-
-        None => (),
-    }
-
-    // print stats
-    stdout.queue(MoveTo(width * 4, 1)).unwrap();
-    stdout
-        .queue(Print(format!("Score: {}", gs.gamescore.score)))
-        .unwrap();
-    stdout.queue(MoveTo(width * 4, 3)).unwrap();
-    stdout
-        .queue(Print(format!("Level: {}", gs.gamescore.level)))
-        .unwrap();
-    stdout.queue(MoveTo(width * 4, 5)).unwrap();
-    gs.gamescore.update();
-    let time = gs.gamescore.get_time();
-    stdout
-        .queue(Print(format!("Time: {}:{:02}", time / 60, time % 60)))
-        .unwrap();
-
-    // next piece
-    stdout.queue(MoveTo(width * 4, 8)).unwrap();
-    stdout.queue(Print("Next:")).unwrap();
-    stdout.queue(MoveTo(width * 4, 10)).unwrap();
-    for row in 0..gs.next_piece.shape.len() {
-        for col in 0..gs.next_piece.shape[row].len() {
-            if gs.next_piece.shape[row][col] == 'a' {
-                let color = if !colors {
-                    gs.next_piece.as_color()
-                } else {
-                    Color::White
-                };
-
-                stdout
-                    .queue(SetForegroundColor(color))
-                    .unwrap()
-                    .queue(Print(block_characters))
-                    .unwrap()
-                    .queue(ResetColor)
-                    .unwrap();
-            } else {
-                stdout.queue(Print("  ")).unwrap();
-            }
-        }
-        stdout.queue(MoveTo(width * 4, (row + 11) as u16)).unwrap();
-    }
-
-    stdout.flush().unwrap();
 }
 
 pub fn init(width: usize, height: usize) -> Vec<Vec<Tetrominoe>> {
@@ -143,35 +74,6 @@ pub fn init(width: usize, height: usize) -> Vec<Vec<Tetrominoe>> {
     for _ in 0..height {
         display.push(vec![Tetrominoe::default(); width]);
     }
-
-    // walls
-    let mut stdout = stdout();
-    stdout.queue(Clear(ClearType::All)).unwrap();
-    stdout.queue(MoveTo(11, 1)).unwrap(); // move cursor to top left while leaving space for hold
-    for row in display.iter().enumerate() {
-        stdout.queue(Print("<!")).unwrap(); // left wall
-        for _ in row.1 {
-            stdout.queue(Print("  ")).unwrap();
-        }
-        stdout.queue(Print("!>")).unwrap(); // right wall
-        stdout.queue(MoveTo(11, (row.0 + 2) as u16)).unwrap();
-    }
-    stdout
-        .queue(Print(format!(
-            "<!{}!>\r\n",
-            "=".repeat(display[0].len() * 2)
-        )))
-        .unwrap(); // bottom wall
-    stdout
-        .queue(Print(format!(
-            "{}{}",
-            " ".repeat(13),
-            "\\/".repeat(display[0].len())
-        )))
-        .unwrap(); // bottom spikes
-    stdout.queue(Hide).unwrap(); // Hide the cursor
-    stdout.flush().unwrap();
-
     display
 }
 
@@ -407,15 +309,15 @@ pub fn full_line(gs: &mut GameState) {
             .insert(0, vec![Tetrominoe::default(); gs.display[0].len()]); // add new line at the top
     }
 
-    match lines {
-        1 => gs.gamescore.score += 40 * (gs.gamescore.level + 1),
-        2 => gs.gamescore.score += 100 * (gs.gamescore.level + 1),
-        3 => gs.gamescore.score += 300 * (gs.gamescore.level + 1),
-        4 => gs.gamescore.score += 1200 * (gs.gamescore.level + 1),
-        _ => (),
-    }
+    // match lines {
+    //     1 => gs.gamescore.score += 40 * (gs.gamescore.level + 1),
+    //     2 => gs.gamescore.score += 100 * (gs.gamescore.level + 1),
+    //     3 => gs.gamescore.score += 300 * (gs.gamescore.level + 1),
+    //     4 => gs.gamescore.score += 1200 * (gs.gamescore.level + 1),
+    //     _ => (),
+    // }
 
-    gs.gamescore.level = gs.gamescore.score / 1000;
+    // gs.gamescore.level = gs.gamescore.score / 1000;
 }
 
 pub fn ghost_piece(gs: &mut GameState) {
@@ -452,69 +354,6 @@ fn gravity_until_new_piece(gs: &mut GameState) {
     gs.display = prev_display;
 }
 
-pub fn get_input() -> char {
-    loop {
-        if poll(Duration::from_millis(0)).unwrap() {
-            let input = event::read().unwrap();
-            match input {
-                Event::Key(KeyEvent {
-                    code: KeyCode::Char('q'),
-                    kind: KeyEventKind::Press,
-                    ..
-                }) => return 'q', // quit
-                Event::Key(KeyEvent {
-                    code: KeyCode::Char(' '),
-                    kind: KeyEventKind::Press,
-                    ..
-                }) => return 's', // hard drop
-                Event::Key(KeyEvent {
-                    code: KeyCode::Char('c'),
-                    kind: KeyEventKind::Press,
-                    ..
-                }) => return 'c', // hold
-                Event::Key(KeyEvent {
-                    code: KeyCode::Char('p'),
-                    kind: KeyEventKind::Press,
-                    ..
-                }) => return 'p', // pause
-                Event::Key(KeyEvent {
-                    code: KeyCode::Left,
-                    kind: KeyEventKind::Press,
-                    ..
-                }) => return 'l', // move left
-                Event::Key(KeyEvent {
-                    code: KeyCode::Right,
-                    kind: KeyEventKind::Press,
-                    ..
-                }) => return 'r', // move right
-                Event::Key(KeyEvent {
-                    code: KeyCode::Up,
-                    kind: KeyEventKind::Press,
-                    ..
-                }) => return 'u', // rotate clockwise
-                Event::Key(KeyEvent {
-                    code: KeyCode::Down,
-                    kind: KeyEventKind::Press,
-                    ..
-                }) => return 'd', // soft drop
-                Event::Key(KeyEvent {
-                    code: KeyCode::Char('y'),
-                    kind: KeyEventKind::Press,
-                    ..
-                }) => return 'y', // yes
-                Event::Key(KeyEvent {
-                    code: KeyCode::Char('n'),
-                    kind: KeyEventKind::Press,
-                    ..
-                }) => return 'n', // no
-
-                _ => (),
-            }
-        } else {
-            return ' ';
-        }
-    }
-}
 
 pub fn hold(gs: &mut GameState) {
     // clear piece
@@ -543,60 +382,60 @@ fn get_next_piece(next_piece: &mut Tetrominoe) -> char {
     temp
 }
 
-pub fn put_text(width: u16, height: u16, text: &str) {
-    let mut stdout = stdout();
+// pub fn put_text(width: u16, height: u16, text: &str) {
+//     let mut stdout = stdout();
 
-    // top bar
-    stdout.queue(MoveTo(width + 3, height / 2 - 2)).unwrap();
-    stdout
-        .queue(SetForegroundColor(Color::Rgb {
-            r: 255,
-            g: 105,
-            b: 97,
-        }))
-        .unwrap()
-        .queue(Print("=".repeat(width as usize * 2)))
-        .unwrap()
-        .queue(ResetColor)
-        .unwrap();
+//     // top bar
+//     stdout.queue(MoveTo(width + 3, height / 2 - 2)).unwrap();
+//     stdout
+//         .queue(SetForegroundColor(Color::Rgb {
+//             r: 255,
+//             g: 105,
+//             b: 97,
+//         }))
+//         .unwrap()
+//         .queue(Print("=".repeat(width as usize * 2)))
+//         .unwrap()
+//         .queue(ResetColor)
+//         .unwrap();
 
-    stdout.queue(MoveTo(width + 3, height / 2 - 1)).unwrap();
-    stdout.queue(Print(" ".repeat(width as usize * 2))).unwrap();
+//     stdout.queue(MoveTo(width + 3, height / 2 - 1)).unwrap();
+//     stdout.queue(Print(" ".repeat(width as usize * 2))).unwrap();
 
-    // text
-    stdout.queue(MoveTo(width + 3, height / 2)).unwrap();
-    stdout
-        .queue(SetForegroundColor(Color::Rgb {
-            r: 255,
-            g: 105,
-            b: 97,
-        }))
-        .unwrap()
-        .queue(Print(format!(
-            "{:^text_width$}",
-            text,
-            text_width = width as usize * 2
-        )))
-        .unwrap()
-        .queue(ResetColor)
-        .unwrap();
+//     // text
+//     stdout.queue(MoveTo(width + 3, height / 2)).unwrap();
+//     stdout
+//         .queue(SetForegroundColor(Color::Rgb {
+//             r: 255,
+//             g: 105,
+//             b: 97,
+//         }))
+//         .unwrap()
+//         .queue(Print(format!(
+//             "{:^text_width$}",
+//             text,
+//             text_width = width as usize * 2
+//         )))
+//         .unwrap()
+//         .queue(ResetColor)
+//         .unwrap();
 
-    stdout.queue(MoveTo(width + 3, height / 2 + 1)).unwrap();
-    stdout.queue(Print(" ".repeat(width as usize * 2))).unwrap();
+//     stdout.queue(MoveTo(width + 3, height / 2 + 1)).unwrap();
+//     stdout.queue(Print(" ".repeat(width as usize * 2))).unwrap();
 
-    // bottom bar
-    stdout.queue(MoveTo(width + 3, height / 2 + 2)).unwrap();
-    stdout
-        .queue(SetForegroundColor(Color::Rgb {
-            r: 255,
-            g: 105,
-            b: 97,
-        }))
-        .unwrap()
-        .queue(Print("=".repeat(width as usize * 2)))
-        .unwrap()
-        .queue(ResetColor)
-        .unwrap();
+//     // bottom bar
+//     stdout.queue(MoveTo(width + 3, height / 2 + 2)).unwrap();
+//     stdout
+//         .queue(SetForegroundColor(Color::Rgb {
+//             r: 255,
+//             g: 105,
+//             b: 97,
+//         }))
+//         .unwrap()
+//         .queue(Print("=".repeat(width as usize * 2)))
+//         .unwrap()
+//         .queue(ResetColor)
+//         .unwrap();
 
-    stdout.flush().unwrap();
-}
+//     stdout.flush().unwrap();
+// }

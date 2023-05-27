@@ -1,10 +1,5 @@
-use crate::tetlib::{get_input, new_piece, put_text};
-use crate::{gamescore::GameScore, tetlib::init, tetrominoe::Tetrominoe};
-
-struct GameWrapper {
-    game: GameState,
-    hash: u64,
-}
+use bevy::prelude::Resource;
+use crate::{tetlib::init, tetrominoe::Tetrominoe};
 
 // impl GameWrapper {
 //     fn verify(&self) -> bool {
@@ -15,11 +10,10 @@ struct GameWrapper {
 //     }
 // }
 
-#[derive(Clone)]
+#[derive(Clone, Resource)]
 pub struct GameState {
     pub display: Vec<Vec<Tetrominoe>>,
     pub active_piece: Tetrominoe,
-    pub gamescore: GameScore,
     pub hold_piece: Option<Tetrominoe>,
     pub next_piece: Tetrominoe,
     pub counter: usize,
@@ -28,18 +22,14 @@ pub struct GameState {
 
 impl GameState {
     pub fn new(width: usize, height: usize) -> Self {
-        let mut gs = GameState {
+        GameState {
             display: init(width, height),
             active_piece: Tetrominoe::new(None, None),
-            gamescore: GameScore::new(),
             hold_piece: None,
             next_piece: Tetrominoe::random(),
             counter: 0,
             is_game_over: false,
-        };
-        init(width, height);
-        new_piece(&mut gs, None);
-        gs
+        }
     }
 }
 

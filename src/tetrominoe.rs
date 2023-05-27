@@ -217,22 +217,22 @@ impl Tetrominoe {
         Tetrominoe::from(ptype, None)
     }
 
-    pub fn as_color(&self) -> Color {
-        match self.color {
-            TColor::Cyan => Color::Cyan,
-            TColor::Blue => Color::Blue,
-            TColor::Orange => Color::Rgb {
-                r: 255,
-                g: 127,
-                b: 0,
-            },
-            TColor::Yellow => Color::Yellow,
-            TColor::Red => Color::Red,
-            TColor::Magenta => Color::Magenta,
-            TColor::Green => Color::Green,
-            TColor::Empty => Color::Black,
-        }
-    }
+    // pub fn as_color(&self) -> Color {
+    //     match self.color {
+    //         TColor::Cyan => Color::Cyan,
+    //         TColor::Blue => Color::Blue,
+    //         TColor::Orange => Color::Rgb {
+    //             r: 255,
+    //             g: 127,
+    //             b: 0,
+    //         },
+    //         TColor::Yellow => Color::Yellow,
+    //         TColor::Red => Color::Red,
+    //         TColor::Magenta => Color::Magenta,
+    //         TColor::Green => Color::Green,
+    //         TColor::Empty => Color::Black,
+    //     }
+    // }
 }
 
 fn getrandom(end: u32) -> u32 {

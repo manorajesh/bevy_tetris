@@ -1,98 +1,66 @@
 // Tetris
 
-mod gamescore;
-mod gamestate;
-mod tetlib;
-mod tetrominoe;
-
 use bevy::prelude::*;
-
-use std::{
-    thread::sleep,
-    time::Duration,
-};
-
 use gamestate::GameState;
 use tetlib::*;
 
-pub const WIDTH: usize = 10;
-pub const HEIGHT: usize = 20;
+mod tetlib;
+mod tetrominoe;
+mod gamestate;
+
+#[derive(Resource)]
+struct GameTimer(Timer);
 
 fn setup(mut commands: Commands) {
-
+    commands.spawn(Camera2dBundle::default());
+    commands.spawn(SpriteBundle {
+        sprite: Sprite {
+            color: Color::rgb(0.25, 0.25, 0.75),
+            custom_size: Some(Vec2::new(25.0, 25.0)),
+            ..default()
+        },
+        transform: Transform::from_translation(Vec3::new(-50., 0., 0.)),
+        ..default()
+    });
 }
 
-fn main() {
-    const MAX_LEVEL: usize = 20;
-    const GRAV_TICK: usize = 40;
-    const LEVEL_MULT: f64 = 0.85;
-
-    let mut gs = GameState::new(WIDTH, HEIGHT);
-
-    // loop for new game
-    loop {
-        // game loop
-        loop {
-            let prev_display = gs.display.clone();
-
-            // handle input
-            let key = get_input();
-
-            // quit
-            if key == 'q' {
-                break;
-            }
-
-            if key == 'p' {
-                let mut key = get_input();
-                put_text(WIDTH as u16, HEIGHT as u16, "P A U S E D");
-                while key != 'p' && key != 'q' {
-                    key = get_input();
-                    sleep(Duration::from_millis(10));
-                }
-            }
-
-            // gravity
-            if gs.counter
-                >= (GRAV_TICK as f64 * LEVEL_MULT.powf(gs.gamescore.level as f64)) as usize
-            {
-                if gravity(&mut gs) {
-                    gs.is_game_over = true;
-                    break;
-                }
-                gs.counter = if gs.gamescore.level < MAX_LEVEL {
-                    0
-                } else {
-                    100
-                };
-            }
-
-            // handle input
-            handle_input(&mut gs, key);
-
-            // hold piece
-            if key == 'c' {
-                hold(&mut gs);
-            }
-
-            // full line
-            full_line(&mut gs);
-
-            // ghost piece
-            ghost_piece(&mut gs);
-
-            // check if gs.display was changed
-            let is_updated = gs.display != prev_display || gs.is_game_over;
-
-            // render
-            render(&mut gs, is_updated, &"██".to_string(), &true);
-            sleep(Duration::from_millis(10));
-            gs.counter += 1;
-        }
-        gs = GameState::new(WIDTH, HEIGHT);
+fn gravity_system(mut gs: ResMut<GameState>, mut timer: ResMut<GameTimer>, time: Res<Time>) {
+    if timer.0.tick(time.delta()).just_finished() {
+        gravity(&mut *gs);
     }
 }
 
-fn path_exists(path: &String) -> bool {
-    std::path::Path::new(path).exists()
+fn handle_input_system(mut gs: ResMut<GameState>, keyboard_input: Res<Input<KeyCode>>)  {
+    if keyboard_input.just_pressed(KeyCode::Left) {
+        handle_input(&mut *gs, 'l');
+    } else if keyboard_input.just_pressed(KeyCode::Right) {
+        handle_input(&mut *gs, 'r');
+    } else if keyboard_input.just_pressed(KeyCode::Space) {
+        handle_input(&mut *gs, 's');
+    } else if keyboard_input.just_pressed(KeyCode::Down) {
+        handle_input(&mut *gs, 'd');
+    } else if keyboard_input.just_pressed(KeyCode::Up) {
+        handle_input(&mut *gs, 'u');
+    } else if keyboard_input.just_pressed(KeyCode::C) {
+        hold(&mut *gs);
+    }
+}
+
+fn ghost_piece_system(mut gs: ResMut<GameState>, mut timer: ResMut<GameTimer>, time: Res<Time>) {
+    if timer.0.tick(time.delta()).just_finished() {
+        ghost_piece(&mut *gs);
+    }
+}
+
+fn main() {
+    App::new()
+        .add_plugins(DefaultPlugins)
+        .insert_resource(GameState::new(10, 20))
+        .insert_resource(GameTimer(Timer::from_seconds(1.0, TimerMode::Repeating)))
+        .add_startup_system(setup)
+        .add_system(gravity_system)
+        .add_system(handle_input_system)
+        .add_system(ghost_piece_system)
+        .add_system(bevy::window::close_on_esc)
+        .run();
 }
