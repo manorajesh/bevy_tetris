@@ -163,6 +163,7 @@ fn move_sprites(mut commands: Commands, query: Query<Entity, With<Block>>) {
 
 fn main() {
     App::new()
+    .insert_resource(ClearColor(Color::rgb(0.1, 0.1, 0.1)))
     .add_plugins(DefaultPlugins.set(WindowPlugin {  
         primary_window: Some(Window {  
         title: "Tetris".into(),  
