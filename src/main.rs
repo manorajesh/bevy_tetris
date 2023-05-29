@@ -50,7 +50,7 @@ fn handle_input_system(mut gs: ResMut<GameState>, keyboard_input: Res<Input<KeyC
     }
 }
 
-fn ghost_piece_system(mut gs: ResMut<GameState>, mut timer: ResMut<GameTimer>, time: Res<Time>) {
+fn ghost_piece_system(mut gs: ResMut<GameState>) {
         ghost_piece(&mut *gs);
 }
 
@@ -58,21 +58,22 @@ fn full_line_system(mut gs: ResMut<GameState>) {
     full_line(&mut *gs);
 }
 
-fn render_system(gs: Res<GameState>, mut commands: Commands) {
+fn render_system(gs: Res<GameState>, mut commands: Commands, asset_server: Res<AssetServer>) {
     for row in gs.display.iter().enumerate() {
         for col in row.1.iter().enumerate() {
             match col.1.game_state {
                 State::Landed | State::Active => {
                     commands.spawn((Block, SpriteBundle {
+                        texture: asset_server.load(col.1.as_color()),
                         sprite: Sprite {
-                            color: col.1.as_color(),
+                            // color: col.1.as_color(),
                             custom_size: Some(Vec2::new(20.0, 20.0)),
                             ..default()
                         },
                         transform: Transform::from_translation(Vec3::new((-200 + col.0 as i32 * 20) as f32, (200 - row.0 as i32 * 20) as f32, 0.)),
                         ..default()
                     }));
-                    print!("A")
+                    // print!("A")
                 }, 
                 State::Ghost => {
                     commands.spawn((Block, SpriteBundle {
@@ -84,10 +85,10 @@ fn render_system(gs: Res<GameState>, mut commands: Commands) {
                         transform: Transform::from_translation(Vec3::new((-200 + col.0 as i32 * 20) as f32, (200 - row.0 as i32 * 20) as f32, 0.)),
                         ..default()
                     }));
-                    print!("G")
+                    // print!("G")
                 },
                 _ => {
-                    print!(".")
+                    // print!(".")
                 }
             }
         }
@@ -105,7 +106,7 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .insert_resource(GameState::new(10, 20))
-        .insert_resource(GameTimer(Timer::from_seconds(0.7, TimerMode::Repeating)))
+        .insert_resource(GameTimer(Timer::from_seconds(0.4, TimerMode::Repeating)))
         // .add_simple_outer_schedule()
         .add_startup_system(setup)
         .add_systems(
@@ -114,10 +115,10 @@ fn main() {
                 handle_input_system,
                 ghost_piece_system,
                 full_line_system,
+                render_system,
+                move_sprites,
             )
         )
-        .add_system(render_system)
-        .add_system(move_sprites)
         .add_system(bevy::window::close_on_esc)
         .run();
 }

@@ -218,16 +218,16 @@ impl Tetrominoe {
         Tetrominoe::from(ptype, None)
     }
 
-    pub fn as_color(&self) -> Color {
+    pub fn as_color(&self) -> &str {
         match self.color {
-            TColor::Cyan => Color::CYAN,
-            TColor::Blue => Color::BLUE,
-            TColor::Orange => Color::ORANGE,
-            TColor::Yellow => Color::YELLOW,
-            TColor::Red => Color::RED,
-            TColor::Magenta => Color::MAROON,
-            TColor::Green => Color::GREEN,
-            TColor::Empty => Color::BLACK,
+            TColor::Cyan => "blocks/cyan.png",
+            TColor::Blue => "blocks/blue.png",
+            TColor::Orange => "blocks/orange.png",
+            TColor::Yellow => "blocks/yellow.png",
+            TColor::Red => "blocks/red.png",
+            TColor::Magenta => "blocks/magenta.png",
+            TColor::Green => "blocks/green.png",
+            TColor::Empty => "",
         }
     }
 }
