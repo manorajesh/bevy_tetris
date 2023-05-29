@@ -15,17 +15,71 @@ struct GameTimer(Timer);
 #[derive(Component)]
 struct Block;
 
-fn setup(mut commands: Commands) {
+const WIDTH: usize = 10;
+const HEIGHT: usize = 20;
+
+const LEFT: i32 = -200;
+const TOP: i32 = 200;
+
+const BLOCK_SIZE: f32 = 20.0;
+
+
+fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn(Camera2dBundle::default());
-    commands.spawn((Block, SpriteBundle {
-        sprite: Sprite {
-            color: Color::rgb(0.25, 0.25, 0.75),
-            custom_size: Some(Vec2::new(10.0, 10.0)),
+    // top
+    for i in 0..WIDTH {
+        commands.spawn(SpriteBundle {
+            texture: asset_server.load("blocks/gray.png"),
+            sprite: Sprite {
+                custom_size: Some(Vec2::new(BLOCK_SIZE, BLOCK_SIZE)),
+                ..default()
+            },
+            transform: Transform::from_translation(Vec3::new((LEFT + i as i32 * BLOCK_SIZE as i32) as f32, TOP as f32+BLOCK_SIZE, 0.)),
             ..default()
-        },
-        transform: Transform::from_translation(Vec3::new(-400., 300., 0.)),
-        ..default()
-    }));
+        });
+    }
+
+    // bottom
+    for i in 0..WIDTH {
+        commands.spawn(SpriteBundle {
+            texture: asset_server.load("blocks/gray.png"),
+            sprite: Sprite {
+                // color: col.1.as_color(),
+                custom_size: Some(Vec2::new(BLOCK_SIZE, BLOCK_SIZE)),
+                ..default()
+            },
+            transform: Transform::from_translation(Vec3::new((LEFT + i as i32 * BLOCK_SIZE as i32) as f32, TOP as f32 - HEIGHT as f32*BLOCK_SIZE, 0.)),
+            ..default()
+        });
+    }
+
+    // left
+    for i in 0..=HEIGHT+1 {
+        commands.spawn(SpriteBundle {
+            texture: asset_server.load("blocks/gray.png"),
+            sprite: Sprite {
+                // color: col.1.as_color(),
+                custom_size: Some(Vec2::new(BLOCK_SIZE, BLOCK_SIZE)),
+                ..default()
+            },
+            transform: Transform::from_translation(Vec3::new(LEFT as f32-BLOCK_SIZE, (TOP - i as i32 * BLOCK_SIZE as i32) as f32+BLOCK_SIZE, 0.)),
+            ..default()
+        });
+    }
+
+    // right
+    for i in 0..=HEIGHT+1 {
+        commands.spawn(SpriteBundle {
+            texture: asset_server.load("blocks/gray.png"),
+            sprite: Sprite {
+                // color: col.1.as_color(),
+                custom_size: Some(Vec2::new(BLOCK_SIZE, BLOCK_SIZE)),
+                ..default()
+            },
+            transform: Transform::from_translation(Vec3::new(LEFT as f32+WIDTH as f32 *BLOCK_SIZE, (TOP - i as i32 * BLOCK_SIZE as i32) as f32+BLOCK_SIZE, 0.)),
+            ..default()
+        });
+    }
 }
 
 fn gravity_system(mut gs: ResMut<GameState>, mut timer: ResMut<GameTimer>, time: Res<Time>) {
@@ -67,10 +121,10 @@ fn render_system(gs: Res<GameState>, mut commands: Commands, asset_server: Res<A
                         texture: asset_server.load(col.1.as_color()),
                         sprite: Sprite {
                             // color: col.1.as_color(),
-                            custom_size: Some(Vec2::new(20.0, 20.0)),
+                            custom_size: Some(Vec2::new(BLOCK_SIZE, BLOCK_SIZE)),
                             ..default()
                         },
-                        transform: Transform::from_translation(Vec3::new((-200 + col.0 as i32 * 20) as f32, (200 - row.0 as i32 * 20) as f32, 0.)),
+                        transform: Transform::from_translation(Vec3::new((LEFT + col.0 as i32 * BLOCK_SIZE as i32) as f32, (TOP - row.0 as i32 * BLOCK_SIZE as i32) as f32, 0.)),
                         ..default()
                     }));
                     // print!("A")
@@ -79,10 +133,10 @@ fn render_system(gs: Res<GameState>, mut commands: Commands, asset_server: Res<A
                     commands.spawn((Block, SpriteBundle {
                         sprite: Sprite {
                             color: Color::Rgba { red: 1., green: 1., blue: 1., alpha: 0.1 },
-                            custom_size: Some(Vec2::new(20.0, 20.0)),
+                            custom_size: Some(Vec2::new(BLOCK_SIZE, BLOCK_SIZE)),
                             ..default()
                         },
-                        transform: Transform::from_translation(Vec3::new((-200 + col.0 as i32 * 20) as f32, (200 - row.0 as i32 * 20) as f32, 0.)),
+                        transform: Transform::from_translation(Vec3::new((LEFT + col.0 as i32 * BLOCK_SIZE as i32) as f32, (TOP - row.0 as i32 * BLOCK_SIZE as i32) as f32, 0.)),
                         ..default()
                     }));
                     // print!("G")
@@ -107,7 +161,6 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .insert_resource(GameState::new(10, 20))
         .insert_resource(GameTimer(Timer::from_seconds(0.4, TimerMode::Repeating)))
-        // .add_simple_outer_schedule()
         .add_startup_system(setup)
         .add_systems(
             (

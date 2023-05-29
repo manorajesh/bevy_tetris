@@ -1,8 +1,3 @@
-use std::{
-    io::{stdout, Write},
-    time::Duration,
-};
-
 use crate::tetrominoe::Tetrominoe;
 use crate::{
     gamestate::GameState,
@@ -10,62 +5,6 @@ use crate::{
 };
 
 pub const EMP: char = '.';
-
-// pub fn render(gs: &mut GameState) {
-//     let mut stdout = stdout();
-//     let width: u16 = gs.display[0].len() as u16;
-
-//     stdout.queue(MoveTo(width + 3, 1)).unwrap(); // move cursor to top left
-//     for (c, row) in gs.display.iter().enumerate() {
-//         for ch in row {
-//             match ch.game_state {
-//                 State::Empty => {
-//                     stdout.queue(Print("  ")).unwrap();
-//                 }
-//                 State::Active | State::Landed => {
-//                     let color = if !colors { ch.as_color() } else { Color::White };
-
-//                     stdout
-//                         .queue(SetForegroundColor(color))
-//                         .unwrap()
-//                         .queue(Print(block_characters))
-//                         .unwrap()
-//                         .queue(ResetColor)
-//                         .unwrap();
-//                 }
-//                 State::Ghost => {
-//                     stdout
-//                         .queue(SetForegroundColor(Color::Rgb {
-//                             r: 50,
-//                             g: 50,
-//                             b: 50,
-//                         }))
-//                         .unwrap()
-//                         .queue(Print("//"))
-//                         .unwrap()
-//                         .queue(ResetColor)
-//                         .unwrap();
-//                 }
-//             }
-//         }
-//         stdout.queue(MoveTo(width + 3, (c + 2) as u16)).unwrap();
-//     }
-// }
-
-pub fn render(gs: &mut GameState) {
-    for row in gs.display.iter() {
-        for ch in row {
-            match ch.game_state {
-                State::Empty => print!("  "),
-                State::Active | State::Landed => {
-                    print!("[]");
-                }
-                State::Ghost => print!("//"),
-            }
-        }
-        println!();
-    }
-}
 
 pub fn init(width: usize, height: usize) -> Vec<Vec<Tetrominoe>> {
     let mut display: Vec<Vec<Tetrominoe>> = Vec::new();
@@ -381,61 +320,3 @@ fn get_next_piece(next_piece: &mut Tetrominoe) -> char {
     *next_piece = Tetrominoe::random();
     temp
 }
-
-// pub fn put_text(width: u16, height: u16, text: &str) {
-//     let mut stdout = stdout();
-
-//     // top bar
-//     stdout.queue(MoveTo(width + 3, height / 2 - 2)).unwrap();
-//     stdout
-//         .queue(SetForegroundColor(Color::Rgb {
-//             r: 255,
-//             g: 105,
-//             b: 97,
-//         }))
-//         .unwrap()
-//         .queue(Print("=".repeat(width as usize * 2)))
-//         .unwrap()
-//         .queue(ResetColor)
-//         .unwrap();
-
-//     stdout.queue(MoveTo(width + 3, height / 2 - 1)).unwrap();
-//     stdout.queue(Print(" ".repeat(width as usize * 2))).unwrap();
-
-//     // text
-//     stdout.queue(MoveTo(width + 3, height / 2)).unwrap();
-//     stdout
-//         .queue(SetForegroundColor(Color::Rgb {
-//             r: 255,
-//             g: 105,
-//             b: 97,
-//         }))
-//         .unwrap()
-//         .queue(Print(format!(
-//             "{:^text_width$}",
-//             text,
-//             text_width = width as usize * 2
-//         )))
-//         .unwrap()
-//         .queue(ResetColor)
-//         .unwrap();
-
-//     stdout.queue(MoveTo(width + 3, height / 2 + 1)).unwrap();
-//     stdout.queue(Print(" ".repeat(width as usize * 2))).unwrap();
-
-//     // bottom bar
-//     stdout.queue(MoveTo(width + 3, height / 2 + 2)).unwrap();
-//     stdout
-//         .queue(SetForegroundColor(Color::Rgb {
-//             r: 255,
-//             g: 105,
-//             b: 97,
-//         }))
-//         .unwrap()
-//         .queue(Print("=".repeat(width as usize * 2)))
-//         .unwrap()
-//         .queue(ResetColor)
-//         .unwrap();
-
-//     stdout.flush().unwrap();
-// }
