@@ -51,20 +51,21 @@ fn handle_input_system(mut gs: ResMut<GameState>, keyboard_input: Res<Input<KeyC
 }
 
 fn ghost_piece_system(mut gs: ResMut<GameState>, mut timer: ResMut<GameTimer>, time: Res<Time>) {
-    if timer.0.tick(time.delta()).just_finished() {
         ghost_piece(&mut *gs);
-    }
 }
 
-fn render_system(gs: Res<GameState>, mut timer: ResMut<GameTimer>, time: Res<Time>, mut commands: Commands) {
-    if timer.0.tick(time.delta()).just_finished() {
+fn full_line_system(mut gs: ResMut<GameState>) {
+    full_line(&mut *gs);
+}
+
+fn render_system(gs: Res<GameState>, mut commands: Commands) {
     for row in gs.display.iter().enumerate() {
         for col in row.1.iter().enumerate() {
             match col.1.game_state {
                 State::Landed | State::Active => {
                     commands.spawn((Block, SpriteBundle {
                         sprite: Sprite {
-                            color: Color::rgb(0.25, 0.25, 0.75),
+                            color: col.1.as_color(),
                             custom_size: Some(Vec2::new(20.0, 20.0)),
                             ..default()
                         },
@@ -74,6 +75,15 @@ fn render_system(gs: Res<GameState>, mut timer: ResMut<GameTimer>, time: Res<Tim
                     print!("A")
                 }, 
                 State::Ghost => {
+                    commands.spawn((Block, SpriteBundle {
+                        sprite: Sprite {
+                            color: Color::Rgba { red: 1., green: 1., blue: 1., alpha: 0.1 },
+                            custom_size: Some(Vec2::new(20.0, 20.0)),
+                            ..default()
+                        },
+                        transform: Transform::from_translation(Vec3::new((-200 + col.0 as i32 * 20) as f32, (200 - row.0 as i32 * 20) as f32, 0.)),
+                        ..default()
+                    }));
                     print!("G")
                 },
                 _ => {
@@ -84,26 +94,30 @@ fn render_system(gs: Res<GameState>, mut timer: ResMut<GameTimer>, time: Res<Tim
         println!()
     }
 }
-}
 
-fn move_sprites(mut commands: Commands, query: Query<Entity, With<Block>>, mut timer: ResMut<GameTimer>, time: Res<Time>) {
-    if timer.0.tick(time.delta()).just_finished() {
+fn move_sprites(mut commands: Commands, query: Query<Entity, With<Block>>) {
     for entity in query.iter() {
         commands.entity(entity).despawn();
     }
-}
 }
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .insert_resource(GameState::new(10, 20))
-        .insert_resource(GameTimer(Timer::from_seconds(0.5, TimerMode::Repeating)))
+        .insert_resource(GameTimer(Timer::from_seconds(0.7, TimerMode::Repeating)))
+        // .add_simple_outer_schedule()
         .add_startup_system(setup)
-        .add_system(gravity_system)
-        .add_system(handle_input_system)
-        .add_system(ghost_piece_system)
-        .add_systems((move_sprites, render_system.after(move_sprites)))
+        .add_systems(
+            (
+                gravity_system,
+                handle_input_system,
+                ghost_piece_system,
+                full_line_system,
+            )
+        )
+        .add_system(render_system)
+        .add_system(move_sprites)
         .add_system(bevy::window::close_on_esc)
         .run();
 }

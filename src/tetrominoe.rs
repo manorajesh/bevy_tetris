@@ -1,3 +1,4 @@
+use bevy::prelude::Color;
 use oorandom::Rand32;
 use std::time::SystemTime;
 
@@ -217,22 +218,18 @@ impl Tetrominoe {
         Tetrominoe::from(ptype, None)
     }
 
-    // pub fn as_color(&self) -> Color {
-    //     match self.color {
-    //         TColor::Cyan => Color::Cyan,
-    //         TColor::Blue => Color::Blue,
-    //         TColor::Orange => Color::Rgb {
-    //             r: 255,
-    //             g: 127,
-    //             b: 0,
-    //         },
-    //         TColor::Yellow => Color::Yellow,
-    //         TColor::Red => Color::Red,
-    //         TColor::Magenta => Color::Magenta,
-    //         TColor::Green => Color::Green,
-    //         TColor::Empty => Color::Black,
-    //     }
-    // }
+    pub fn as_color(&self) -> Color {
+        match self.color {
+            TColor::Cyan => Color::CYAN,
+            TColor::Blue => Color::BLUE,
+            TColor::Orange => Color::ORANGE,
+            TColor::Yellow => Color::YELLOW,
+            TColor::Red => Color::RED,
+            TColor::Magenta => Color::MAROON,
+            TColor::Green => Color::GREEN,
+            TColor::Empty => Color::BLACK,
+        }
+    }
 }
 
 fn getrandom(end: u32) -> u32 {
