@@ -1,6 +1,4 @@
-
-use oorandom::Rand32;
-use std::time::SystemTime;
+use rand::{seq::SliceRandom, thread_rng};
 
 use crate::tetlib::EMP;
 
@@ -205,17 +203,8 @@ impl Tetrominoe {
     }
 
     pub fn random() -> Tetrominoe {
-        let ptype = match getrandom(7) {
-            0 => 'I',
-            1 => 'J',
-            2 => 'L',
-            3 => 'O',
-            4 => 'Z',
-            5 => 'T',
-            6 => 'S',
-            _ => panic!("Invalid random number"),
-        };
-        Tetrominoe::from(ptype, None)
+        let piece = ['I', 'J', 'L', 'O', 'S', 'T', 'Z'].choose(&mut thread_rng()).unwrap();
+        Tetrominoe::from(*piece, None)
     }
 
     pub fn as_color(&self) -> &str {
@@ -230,12 +219,4 @@ impl Tetrominoe {
             TColor::Empty => "",
         }
     }
-}
-
-fn getrandom(end: u32) -> u32 {
-    let time_from_epoch = SystemTime::now()
-        .duration_since(SystemTime::UNIX_EPOCH)
-        .unwrap()
-        .as_secs();
-    Rand32::new(time_from_epoch).rand_range(0..end)
 }

@@ -1,6 +1,6 @@
 // Tetris
 
-use bevy::prelude::*;
+use bevy::{prelude::*, window::PresentMode, diagnostic::{LogDiagnosticsPlugin, FrameTimeDiagnosticsPlugin}};
 use gamestate::GameState;
 use tetlib::*;
 use tetrominoe::State;
@@ -18,14 +18,19 @@ struct Block;
 const WIDTH: usize = 10;
 const HEIGHT: usize = 20;
 
-const LEFT: i32 = -200;
+const LEFT: i32 = -88;
 const TOP: i32 = 200;
 
 const BLOCK_SIZE: f32 = 20.0;
 
 
-fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn setup(mut commands: Commands, asset_server: Res<AssetServer>, audio: Res<Audio>) {
     commands.spawn(Camera2dBundle::default());
+    audio.play_with_settings(
+        asset_server.load("music/korobeiniki.ogg"),
+        PlaybackSettings::LOOP.with_volume(0.5),
+    );
+
     // top
     for i in 0..WIDTH {
         commands.spawn(SpriteBundle {
@@ -146,7 +151,7 @@ fn render_system(gs: Res<GameState>, mut commands: Commands, asset_server: Res<A
                 }
             }
         }
-        println!()
+        // println!()
     }
 }
 
@@ -158,7 +163,19 @@ fn move_sprites(mut commands: Commands, query: Query<Entity, With<Block>>) {
 
 fn main() {
     App::new()
-        .add_plugins(DefaultPlugins)
+    .add_plugins(DefaultPlugins.set(WindowPlugin {  
+        primary_window: Some(Window {  
+        title: "Tetris".into(),  
+        resolution: (500., 600.).into(),  
+        present_mode: PresentMode::AutoVsync,  
+        fit_canvas_to_parent: true,  
+        prevent_default_event_handling: false,  
+        ..default()  
+        }),  
+        ..default()  
+        }))
+        .add_plugin(LogDiagnosticsPlugin::default())  
+        .add_plugin(FrameTimeDiagnosticsPlugin)  
         .insert_resource(GameState::new(10, 20))
         .insert_resource(GameTimer(Timer::from_seconds(0.4, TimerMode::Repeating)))
         .add_startup_system(setup)
