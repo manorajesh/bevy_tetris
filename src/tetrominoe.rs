@@ -104,9 +104,9 @@ impl Tetrominoe {
             'T' => {
                 self.color = TColor::Magenta;
                 [
-                    [EMP, EMP, EMP, EMP],
                     [EMP, 'a', EMP, EMP],
                     ['a', 'a', 'a', EMP],
+                    [EMP, EMP, EMP, EMP],
                     [EMP, EMP, EMP, EMP],
                 ]
             }
@@ -136,7 +136,7 @@ impl Tetrominoe {
     pub fn rotate(&mut self) {
         match self.ptype {
             'O' => (),
-            'I' | 'J' | 'L' | 'T' => {
+            'I' | 'J' | 'L' => {
                 // transpose or swap rows and columns
                 let n = self.shape.len();
                 for i in 0..n {
@@ -191,6 +191,52 @@ impl Tetrominoe {
                         [EMP, EMP, EMP, EMP],
                     ];
                     self.rotation_state = 0;
+                }
+            }
+
+            'T' => {
+                self.shape = match self.rotation_state {
+                    0 => {
+                        self.rotation_state += 1;
+                        [
+                            [EMP, 'a', EMP, EMP],
+                            [EMP, 'a', 'a', EMP],
+                            [EMP, 'a', EMP, EMP],
+                            [EMP, EMP, EMP, EMP],
+                        ]
+                    }
+
+                    1 => {
+                        self.rotation_state += 1;
+                        [
+                            [EMP, EMP, EMP, EMP],
+                            ['a', 'a', 'a', EMP],
+                            [EMP, 'a', EMP, EMP],
+                            [EMP, EMP, EMP, EMP],
+                        ]
+                    }
+
+                    2 => {
+                        self.rotation_state += 1;
+                        [
+                            [EMP, 'a', EMP, EMP],
+                            ['a', 'a', EMP, EMP],
+                            [EMP, 'a', EMP, EMP],
+                            [EMP, EMP, EMP, EMP],
+                        ]
+                    }
+
+                    3 => {
+                        self.rotation_state = 0;
+                        [
+                            [EMP, 'a', EMP, EMP],
+                            ['a', 'a', 'a', EMP],
+                            [EMP, EMP, EMP, EMP],
+                            [EMP, EMP, EMP, EMP],
+                        ]
+                    }
+
+                    _ => panic!("Unknown rotation state: {}", self.rotation_state),
                 }
             }
 
