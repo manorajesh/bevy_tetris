@@ -3,7 +3,7 @@
 use bevy::{prelude::*, window::PresentMode, diagnostic::{LogDiagnosticsPlugin, FrameTimeDiagnosticsPlugin}};
 use gamestate::GameState;
 use tetlib::*;
-use tetrominoe::State;
+use tetrominoe::{State, Tetrominoe};
 
 mod tetlib;
 mod tetrominoe;
@@ -29,6 +29,31 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>, audio: Res<Audi
     audio.play_with_settings(
         asset_server.load("music/korobeiniki.ogg"),
         PlaybackSettings::LOOP.with_volume(0.5),
+    );
+
+    // Hold text
+    commands.spawn(
+        TextBundle::from_sections([
+            TextSection {
+                value: "Hold".to_string(),
+                style: TextStyle {
+                    font: asset_server.load("font/sprint-2.ttf"),
+                    font_size: 15.0,
+                    color: Color::WHITE,
+                },
+            },
+        ])
+        .with_style(
+            Style {
+                position_type: PositionType::Absolute,
+            position: UiRect {
+                top: Val::Px(TOP as f32-130.),
+                left: Val::Px(LEFT as f32+120.),
+                ..default()
+            },
+            ..default()
+            }
+        )
     );
 
     // top
@@ -117,6 +142,32 @@ fn full_line_system(mut gs: ResMut<GameState>) {
     full_line(&mut *gs);
 }
 
+fn render_hold(gs: Res<GameState>, mut commands: Commands, asset_server: Res<AssetServer>) {
+    match &gs.hold_piece {
+        Some(piece) => {
+            let mut blank = Tetrominoe::new(None, None);
+            let upright = blank.set(piece.ptype);
+            for row in 0..upright.shape.len() {
+                for col in 0..upright.shape[row].len() {
+                    if upright.shape[row][col] == 'a' {
+                        commands.spawn((Block, SpriteBundle {
+                            texture: asset_server.load(upright.as_color()),
+                            sprite: Sprite {
+                                custom_size: Some(Vec2::new(BLOCK_SIZE, BLOCK_SIZE)),
+                                ..default()
+                            },
+                            transform: Transform::from_translation(Vec3::new((LEFT + col as i32 * BLOCK_SIZE as i32) as f32-119., (TOP - row as i32 * BLOCK_SIZE as i32) as f32-20., 0.)),
+                            ..default()
+                        }));
+                    }
+            }
+        }
+    },
+
+        None => (),
+    }
+}
+
 fn render_system(gs: Res<GameState>, mut commands: Commands, asset_server: Res<AssetServer>) {
     for row in gs.display.iter().enumerate() {
         for col in row.1.iter().enumerate() {
@@ -186,6 +237,7 @@ fn main() {
                 handle_input_system,
                 ghost_piece_system,
                 full_line_system,
+                render_hold,
                 render_system,
                 move_sprites,
             )
