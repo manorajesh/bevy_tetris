@@ -8,6 +8,7 @@ use tetrominoe::{State, Tetrominoe};
 mod tetlib;
 mod tetrominoe;
 mod gamestate;
+mod bag;
 
 #[derive(Resource)]
 struct GameTimer(Timer);

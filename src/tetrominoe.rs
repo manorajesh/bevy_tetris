@@ -1,6 +1,4 @@
-use rand::{seq::SliceRandom, thread_rng};
-
-use crate::tetlib::EMP;
+use crate::{tetlib::EMP, bag::Bag};
 
 #[derive(Clone, PartialEq, Debug, Copy, Default)]
 pub enum TColor {
@@ -248,9 +246,9 @@ impl Tetrominoe {
         *Tetrominoe::new(state, None).set(ptype)
     }
 
-    pub fn random() -> Tetrominoe {
-        let piece = ['I', 'J', 'L', 'O', 'S', 'T', 'Z'].choose(&mut thread_rng()).unwrap();
-        Tetrominoe::from(*piece, None)
+    pub fn random(bag: &mut Bag) -> Tetrominoe {
+        let piece = bag.draw();
+        Tetrominoe::from(piece, None)
     }
 
     pub fn as_color(&self) -> &str {

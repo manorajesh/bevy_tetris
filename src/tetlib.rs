@@ -143,7 +143,7 @@ pub fn new_piece(gs: &mut GameState, desired_piece: Option<char>) -> bool {
         return true;
     }
 
-    let piece = desired_piece.unwrap_or_else(|| get_next_piece(&mut gs.next_piece));
+    let piece = desired_piece.unwrap_or_else(|| get_next_piece(gs));
     match piece {
         'I' => {
             // I
@@ -315,8 +315,8 @@ pub fn hold(gs: &mut GameState) {
     }
 }
 
-fn get_next_piece(next_piece: &mut Tetrominoe) -> char {
-    let temp = next_piece.ptype;
-    *next_piece = Tetrominoe::random();
+fn get_next_piece(gs: &mut GameState) -> char {
+    let temp = gs.next_piece.ptype;
+    gs.next_piece = Tetrominoe::random(&mut gs.bag);
     temp
 }
