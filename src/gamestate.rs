@@ -1,5 +1,5 @@
 use bevy::prelude::Resource;
-use crate::{tetlib::{init, new_piece}, tetrominoe::Tetrominoe, bag::Bag};
+use crate::{tetlib::{init, new_piece}, tetrominoe::Tetrominoe, bag::Bag, gamescore::GameScore};
 
 // impl GameWrapper {
 //     fn verify(&self) -> bool {
@@ -19,6 +19,7 @@ pub struct GameState {
     pub counter: usize,
     pub is_game_over: bool,
     pub bag: Bag,
+    pub gamescore: GameScore,
 }
 
 impl GameState {
@@ -31,6 +32,7 @@ impl GameState {
             counter: 0,
             is_game_over: false,
             bag: Bag::new(),
+            gamescore: GameScore::new(),
         };
         new_piece(&mut gs, None);
         gs

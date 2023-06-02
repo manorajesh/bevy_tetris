@@ -248,15 +248,15 @@ pub fn full_line(gs: &mut GameState) {
             .insert(0, vec![Tetrominoe::default(); gs.display[0].len()]); // add new line at the top
     }
 
-    // match lines {
-    //     1 => gs.gamescore.score += 40 * (gs.gamescore.level + 1),
-    //     2 => gs.gamescore.score += 100 * (gs.gamescore.level + 1),
-    //     3 => gs.gamescore.score += 300 * (gs.gamescore.level + 1),
-    //     4 => gs.gamescore.score += 1200 * (gs.gamescore.level + 1),
-    //     _ => (),
-    // }
+    match lines {
+        1 => gs.gamescore.score += 40 * (gs.gamescore.level + 1),
+        2 => gs.gamescore.score += 100 * (gs.gamescore.level + 1),
+        3 => gs.gamescore.score += 300 * (gs.gamescore.level + 1),
+        4 => gs.gamescore.score += 1200 * (gs.gamescore.level + 1),
+        _ => (),
+    }
 
-    // gs.gamescore.level = gs.gamescore.score / 1000;
+    gs.gamescore.level = gs.gamescore.score / 1000;
 }
 
 pub fn ghost_piece(gs: &mut GameState) {

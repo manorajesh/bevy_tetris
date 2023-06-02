@@ -9,12 +9,19 @@ mod tetlib;
 mod tetrominoe;
 mod gamestate;
 mod bag;
+mod gamescore;
 
 #[derive(Resource)]
 struct GameTimer(Timer);
 
 #[derive(Component)]
 struct Block;
+
+#[derive(Component)]
+struct Score;
+
+#[derive(Component)]
+struct Level;
 
 const WIDTH: usize = 10;
 const HEIGHT: usize = 20;
@@ -23,6 +30,7 @@ const LEFT: i32 = -88;
 const TOP: i32 = 200;
 
 const BLOCK_SIZE: f32 = 20.0;
+const FONT_SIZE: f32 = 23.0;
 
 
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>, audio: Res<Audio>) {
@@ -36,20 +44,20 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>, audio: Res<Audi
     commands.spawn(
         TextBundle::from_sections([
             TextSection {
-                value: "Hold".to_string(),
+                value: "HOLD".to_string(),
                 style: TextStyle {
-                    font: asset_server.load("font/sprint-2.ttf"),
-                    font_size: 15.0,
+                    font: asset_server.load("font/Nineteen-Ninety-Seven.otf"),
+                    font_size: FONT_SIZE,
                     color: Color::WHITE,
                 },
             },
         ])
         .with_style(
             Style {
-                position_type: PositionType::Absolute,
+                position_type: PositionType::Relative,
             position: UiRect {
-                top: Val::Px(TOP as f32-130.),
-                left: Val::Px(LEFT as f32+120.),
+                top: Val::Percent(TOP as f32-188.),
+                left: Val::Percent(LEFT as f32+101.),
                 ..default()
             },
             ..default()
@@ -57,6 +65,62 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>, audio: Res<Audi
         )
     );
 
+    // Scoreboard
+    // Score
+    commands.spawn((Score,
+        TextBundle::from_sections([
+            TextSection::new(
+                "SCORE: ",
+                TextStyle {
+                    font: asset_server.load("font/Nineteen-Ninety-Seven.otf"),
+                    font_size: FONT_SIZE,
+                    color: Color::WHITE,
+                },
+            ),
+            TextSection::from_style(TextStyle {
+                font: asset_server.load("font/Nineteen-Ninety-Seven.otf"),
+                font_size: FONT_SIZE,
+                color: Color::WHITE,
+            }),
+        ])
+        .with_style(Style {
+            position_type: PositionType::Absolute,
+            position: UiRect {
+                top: Val::Percent(TOP as f32-188.),
+                left: Val::Percent(LEFT as f32+163.),
+                ..default()
+            },
+            ..default()
+        }),
+    ));
+
+    commands.spawn((Level,
+        TextBundle::from_sections([
+            TextSection::new(
+                "LEVEL: ",
+                TextStyle {
+                    font: asset_server.load("font/Nineteen-Ninety-Seven.otf"),
+                    font_size: FONT_SIZE,
+                    color: Color::WHITE,
+                },
+            ),
+            TextSection::from_style(TextStyle {
+                font: asset_server.load("font/Nineteen-Ninety-Seven.otf"),
+                font_size: FONT_SIZE,
+                color: Color::WHITE,
+            }),
+        ])
+        .with_style(Style {
+            position_type: PositionType::Absolute,
+            position: UiRect {
+                top: Val::Percent(TOP as f32-182.),
+                left: Val::Percent(LEFT as f32+163.),
+                ..default()
+            },
+            ..default()
+        }),
+    ));
+    
     // top
     for i in 0..WIDTH {
         commands.spawn(SpriteBundle {
@@ -143,6 +207,18 @@ fn full_line_system(mut gs: ResMut<GameState>) {
     full_line(&mut *gs);
 }
 
+fn update_score_system(gs: Res<GameState>, mut query: Query<&mut Text, With<Score>>) {
+    for mut text in query.iter_mut() {
+        text.sections[1].value = gs.gamescore.score.to_string();
+    }
+}
+
+fn update_level_system(gs: Res<GameState>, mut query: Query<&mut Text, With<Level>>) {
+    for mut text in query.iter_mut() {
+        text.sections[1].value = gs.gamescore.level.to_string();
+    }
+}
+
 fn render_hold(gs: Res<GameState>, mut commands: Commands, asset_server: Res<AssetServer>) {
     match &gs.hold_piece {
         Some(piece) => {
@@ -219,7 +295,7 @@ fn main() {
     .add_plugins(DefaultPlugins.set(WindowPlugin {  
         primary_window: Some(Window {  
         title: "Tetris".into(),  
-        resolution: (500., 600.).into(),  
+        resolution: (600., 600.).into(),  
         present_mode: PresentMode::AutoVsync,  
         fit_canvas_to_parent: true,  
         prevent_default_event_handling: false,  
@@ -238,8 +314,10 @@ fn main() {
                 handle_input_system,
                 ghost_piece_system,
                 full_line_system,
+                update_score_system,
+                update_level_system,
                 render_hold,
-                render_system,
+                render_system.after(handle_input_system),
                 move_sprites,
             )
         )
