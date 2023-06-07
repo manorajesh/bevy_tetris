@@ -82,9 +82,9 @@ impl Tetrominoe {
             'O' => {
                 self.color = TColor::Yellow;
                 [
+                    [EMP, 'a', 'a', EMP],
+                    [EMP, 'a', 'a', EMP],
                     [EMP, EMP, EMP, EMP],
-                    [EMP, 'a', 'a', EMP],
-                    [EMP, 'a', 'a', EMP],
                     [EMP, EMP, EMP, EMP],
                 ]
             }

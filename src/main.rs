@@ -1,6 +1,6 @@
 // Tetris
 
-use bevy::{prelude::*, window::PresentMode, diagnostic::{LogDiagnosticsPlugin, FrameTimeDiagnosticsPlugin}};
+use bevy::{prelude::*, window::PresentMode, diagnostic::{LogDiagnosticsPlugin, FrameTimeDiagnosticsPlugin}, app::AppExit, time::Stopwatch};
 use gamestate::GameState;
 use tetlib::*;
 use tetrominoe::{State, Tetrominoe};
@@ -23,11 +23,23 @@ struct Score;
 #[derive(Component)]
 struct Level;
 
+#[derive(Component)]
+struct WatchText;
+
+#[derive(Resource)]
+struct Watch {
+    time: Stopwatch,
+}
+ 
 const WIDTH: usize = 10;
 const HEIGHT: usize = 20;
 
-const LEFT: i32 = -88;
+const LEFT: i32 = -110;
 const TOP: i32 = 200;
+
+const TEXT_TOP_PADDING: f32 = -135.0;
+const LEFT_TEXT_PADDING: f32 = 165.0;
+const RIGHT_TEXT_PADDING: f32 = 530.0;
 
 const BLOCK_SIZE: f32 = 20.0;
 const FONT_SIZE: f32 = 23.0;
@@ -54,10 +66,10 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>, audio: Res<Audi
         ])
         .with_style(
             Style {
-                position_type: PositionType::Relative,
+                position_type: PositionType::Absolute,
             position: UiRect {
-                top: Val::Percent(TOP as f32-188.),
-                left: Val::Percent(LEFT as f32+101.),
+                top: Val::Px(TOP as f32 + TEXT_TOP_PADDING),
+                left: Val::Px(LEFT as f32 + LEFT_TEXT_PADDING),
                 ..default()
             },
             ..default()
@@ -86,8 +98,8 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>, audio: Res<Audi
         .with_style(Style {
             position_type: PositionType::Absolute,
             position: UiRect {
-                top: Val::Percent(TOP as f32-188.),
-                left: Val::Percent(LEFT as f32+163.),
+                top: Val::Px(TOP as f32 + TEXT_TOP_PADDING),
+                left: Val::Px(LEFT as f32 + RIGHT_TEXT_PADDING),
                 ..default()
             },
             ..default()
@@ -113,8 +125,35 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>, audio: Res<Audi
         .with_style(Style {
             position_type: PositionType::Absolute,
             position: UiRect {
-                top: Val::Percent(TOP as f32-182.),
-                left: Val::Percent(LEFT as f32+163.),
+                top: Val::Px(TOP as f32 + TEXT_TOP_PADDING + 50.),
+                left: Val::Px(LEFT as f32 + RIGHT_TEXT_PADDING),
+                ..default()
+            },
+            ..default()
+        }),
+    ));
+
+    commands.spawn((WatchText,
+        TextBundle::from_sections([
+            TextSection::new(
+                "TIME: ",
+                TextStyle {
+                    font: asset_server.load("font/Nineteen-Ninety-Seven.otf"),
+                    font_size: FONT_SIZE,
+                    color: Color::WHITE,
+                },
+            ),
+            TextSection::from_style(TextStyle {
+                font: asset_server.load("font/Nineteen-Ninety-Seven.otf"),
+                font_size: FONT_SIZE,
+                color: Color::WHITE,
+            }),
+        ])
+        .with_style(Style {
+            position_type: PositionType::Absolute,
+            position: UiRect {
+                top: Val::Px(TOP as f32 + TEXT_TOP_PADDING + 100.),
+                left: Val::Px(LEFT as f32 + RIGHT_TEXT_PADDING),
                 ..default()
             },
             ..default()
@@ -177,9 +216,11 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>, audio: Res<Audi
     }
 }
 
-fn gravity_system(mut gs: ResMut<GameState>, mut timer: ResMut<GameTimer>, time: Res<Time>) {
+fn gravity_system(mut gs: ResMut<GameState>, mut timer: ResMut<GameTimer>, time: Res<Time>, mut app_exit_events: ResMut<Events<AppExit>>) {
     if timer.0.tick(time.delta()).just_finished() {
-        gravity(&mut *gs);
+        if gravity(&mut *gs) {
+            app_exit_events.send(AppExit);
+        }
     }
 }
 
@@ -208,15 +249,37 @@ fn full_line_system(mut gs: ResMut<GameState>) {
 }
 
 fn update_score_system(gs: Res<GameState>, mut query: Query<&mut Text, With<Score>>) {
-    for mut text in query.iter_mut() {
-        text.sections[1].value = gs.gamescore.score.to_string();
-    }
+    let mut text = query.single_mut();
+    text.sections[1].value = gs.gamescore.score.to_string();
 }
 
 fn update_level_system(gs: Res<GameState>, mut query: Query<&mut Text, With<Level>>) {
-    for mut text in query.iter_mut() {
-        text.sections[1].value = gs.gamescore.level.to_string();
+    let mut text = query.single_mut();
+    text.sections[1].value = gs.gamescore.level.to_string();
+}
+
+fn update_stopwatch_system(time: Res<Time>, mut stopwatch: ResMut<Watch>, mut query: Query<&mut Text, With<WatchText>>) {
+    let mut text = query.single_mut();
+    text.sections[1].value = format!("{}:{:02}", stopwatch.time.elapsed().as_secs()/60, stopwatch.time.elapsed().as_secs()%60);
+    stopwatch.time.tick(time.delta());
+}
+
+fn render_next(gs: Res<GameState>, mut commands: Commands, asset_server: Res<AssetServer>) {
+    for row in 0..gs.next_piece.shape.len() {
+        for col in 0..gs.next_piece.shape[row].len() {
+            if gs.next_piece.shape[row][col] == 'a' {
+                commands.spawn((Block, SpriteBundle {
+                    texture: asset_server.load(gs.next_piece.as_color()),
+                    sprite: Sprite {
+                        custom_size: Some(Vec2::new(BLOCK_SIZE, BLOCK_SIZE)),
+                        ..default()
+                    },
+                    transform: Transform::from_translation(Vec3::new((LEFT + col as i32 * BLOCK_SIZE as i32) as f32+270., (TOP - row as i32 * BLOCK_SIZE as i32) as f32-125., 0.)),
+                    ..default()
+                }));
+            }
     }
+}
 }
 
 fn render_hold(gs: Res<GameState>, mut commands: Commands, asset_server: Res<AssetServer>) {
@@ -296,7 +359,7 @@ fn main() {
         primary_window: Some(Window {  
         title: "Tetris".into(),  
         resolution: (600., 600.).into(),  
-        present_mode: PresentMode::AutoVsync,  
+        present_mode: PresentMode::AutoNoVsync,  
         fit_canvas_to_parent: true,  
         prevent_default_event_handling: false,  
         ..default()  
@@ -306,6 +369,7 @@ fn main() {
         .add_plugin(LogDiagnosticsPlugin::default())  
         .add_plugin(FrameTimeDiagnosticsPlugin)  
         .insert_resource(GameState::new(10, 20))
+        .insert_resource(Watch { time: Stopwatch::new() })
         .insert_resource(GameTimer(Timer::from_seconds(0.4, TimerMode::Repeating)))
         .add_startup_system(setup)
         .add_systems(
@@ -316,7 +380,9 @@ fn main() {
                 full_line_system,
                 update_score_system,
                 update_level_system,
+                update_stopwatch_system,
                 render_hold,
+                render_next,
                 render_system.after(handle_input_system),
                 move_sprites,
             )
