@@ -1,9 +1,9 @@
-use rand::thread_rng;
 use rand::seq::SliceRandom;
+use rand::thread_rng;
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct Bag {
-    pieces: Vec<char>
+    pieces: Vec<char>,
 }
 
 impl Bag {

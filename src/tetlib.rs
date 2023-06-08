@@ -293,7 +293,6 @@ fn gravity_until_new_piece(gs: &mut GameState) {
     gs.display = prev_display;
 }
 
-
 pub fn hold(gs: &mut GameState) {
     // clear piece
     for row in gs.display.iter_mut() {

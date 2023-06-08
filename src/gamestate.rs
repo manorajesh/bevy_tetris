@@ -1,5 +1,10 @@
+use crate::{
+    bag::Bag,
+    gamescore::GameScore,
+    tetlib::{init, new_piece},
+    tetrominoe::Tetrominoe,
+};
 use bevy::prelude::Resource;
-use crate::{tetlib::{init, new_piece}, tetrominoe::Tetrominoe, bag::Bag, gamescore::GameScore};
 
 // impl GameWrapper {
 //     fn verify(&self) -> bool {
@@ -39,7 +44,7 @@ impl GameState {
     }
 }
 
-    // return true if user wants to repeat
+// return true if user wants to repeat
 //     pub fn serial(&mut self) -> bool {
 //         // repeat
 //         if confirmation("New game?") {

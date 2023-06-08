@@ -1,4 +1,4 @@
-use crate::{tetlib::EMP, bag::Bag};
+use crate::{bag::Bag, tetlib::EMP};
 
 #[derive(Clone, PartialEq, Debug, Copy, Default)]
 pub enum TColor {

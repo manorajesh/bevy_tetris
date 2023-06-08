@@ -6,9 +6,6 @@ pub struct GameScore {
 
 impl GameScore {
     pub fn new() -> Self {
-        GameScore {
-            score: 0,
-            level: 0,
-        }
+        GameScore { score: 0, level: 0 }
     }
 }
