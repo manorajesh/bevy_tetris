@@ -44,12 +44,13 @@ const RIGHT_TEXT_PADDING: f32 = 530.0;
 const BLOCK_SIZE: f32 = 20.0;
 const FONT_SIZE: f32 = 23.0;
 
+const VOLUME: f32 = 0.0;
 
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>, audio: Res<Audio>) {
     commands.spawn(Camera2dBundle::default());
     audio.play_with_settings(
         asset_server.load("music/korobeiniki.ogg"),
-        PlaybackSettings::LOOP.with_volume(0.5),
+        PlaybackSettings::LOOP.with_volume(VOLUME),
     );
 
     // Hold text
@@ -251,16 +252,19 @@ fn full_line_system(mut gs: ResMut<GameState>) {
 fn update_score_system(gs: Res<GameState>, mut query: Query<&mut Text, With<Score>>) {
     let mut text = query.single_mut();
     text.sections[1].value = gs.gamescore.score.to_string();
+    text.sections[1].style.font_size = FONT_SIZE - (text.sections[1].value.len()/4) as f32*5.;
 }
 
 fn update_level_system(gs: Res<GameState>, mut query: Query<&mut Text, With<Level>>) {
     let mut text = query.single_mut();
     text.sections[1].value = gs.gamescore.level.to_string();
+    text.sections[1].style.font_size = FONT_SIZE - (text.sections[1].value.len()/4) as f32*5.;
 }
 
 fn update_stopwatch_system(time: Res<Time>, mut stopwatch: ResMut<Watch>, mut query: Query<&mut Text, With<WatchText>>) {
     let mut text = query.single_mut();
     text.sections[1].value = format!("{}:{:02}", stopwatch.time.elapsed().as_secs()/60, stopwatch.time.elapsed().as_secs()%60);
+    text.sections[1].style.font_size = FONT_SIZE - (text.sections[1].value.len()/7) as f32*5.;
     stopwatch.time.tick(time.delta());
 }
 
@@ -367,7 +371,7 @@ fn main() {
         ..default()  
         }))
         .add_plugin(LogDiagnosticsPlugin::default())  
-        .add_plugin(FrameTimeDiagnosticsPlugin)  
+        .add_plugin(FrameTimeDiagnosticsPlugin)
         .insert_resource(GameState::new(10, 20))
         .insert_resource(Watch { time: Stopwatch::new() })
         .insert_resource(GameTimer(Timer::from_seconds(0.4, TimerMode::Repeating)))
