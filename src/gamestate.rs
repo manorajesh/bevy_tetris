@@ -25,6 +25,7 @@ pub struct GameState {
     pub is_game_over: bool,
     pub bag: Bag,
     pub gamescore: GameScore,
+    pub lines: usize,
 }
 
 impl GameState {
@@ -38,6 +39,7 @@ impl GameState {
             is_game_over: false,
             bag: Bag::new(),
             gamescore: GameScore::new(),
+            lines: 0,
         };
         new_piece(&mut gs, None);
         gs

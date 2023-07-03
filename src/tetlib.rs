@@ -246,6 +246,7 @@ pub fn full_line(gs: &mut GameState) {
     for _ in 0..lines {
         gs.display
             .insert(0, vec![Tetrominoe::default(); gs.display[0].len()]); // add new line at the top
+        gs.lines += 1;
     }
 
     match lines {

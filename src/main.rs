@@ -428,7 +428,7 @@ fn main() {
             primary_window: Some(Window {
                 title: "Tetris".into(),
                 resolution: (600., 600.).into(),
-                present_mode: PresentMode::AutoNoVsync,
+                present_mode: PresentMode::AutoVsync,
                 fit_canvas_to_parent: true,
                 prevent_default_event_handling: false,
                 ..default()

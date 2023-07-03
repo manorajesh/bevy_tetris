@@ -1,5 +1,5 @@
 [package]
-name = "bevy_tetris"
+name = "bevy_tetris_desktop"
 version = "0.1.0"
 edition = "2021"
 
